@@ -1,25 +1,34 @@
 import './styles.css';
 
-const refs = {
-    days: document.querySelector('span[data-value="days"]'),
-    hours: document.querySelector('span[data-value="hours"]'),
-    mins: document.querySelector('span[data-value="mins"]'),
-    secs: document.querySelector('span[data-value="secs"]'),
-}
 
 
 class CountdownTimer {
-    constructor({ onTick }) {
-        this.intervalId = null;
-    }
-    start() {
-        this.intervalId = setInterval(() => {
-            const currentTime = Date.now();
-            const startTime = Date.now();
-            const deltaTime = currentTime - startTime;
-            const time = this.getTimeComponents(deltaTime);
+    constructor({ selector, targetDate }) {
+      this.intervalId = null;
+      this.refs = {
+        days: document.querySelector(selector + ' span[data-value="days"]'),
+        hours: document.querySelector(selector + ' span[data-value="hours"]'),
+        mins: document.querySelector(selector + ' span[data-value="mins"]'),
+        secs: document.querySelector(selector + ' span[data-value="secs"]'),
+        labels: document.querySelectorAll(selector + ' .label')
+      };
+      this.startTime = targetDate;
 
-            this.onTick(time);
+      this.init();
+    }
+  
+  init() {
+    const time = this.getTimeComponents(0);
+    this.onTick(time);
+    }
+  
+  start() {
+        this.intervalId = setInterval(() => {
+            const time = this.getTimeComponents(this.startTime - Date.now());
+            if (time.days < 1 && time.hours < 1 && time.mins < 1 && time.secs < 1)
+              clearInterval(this.intervalId);
+            else 
+              this.onTick(time);
         }, 1000);
     }
     
@@ -29,9 +38,20 @@ class CountdownTimer {
         const mins = this.pad(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
         const secs = this.pad(Math.floor((time % (1000 * 60)) / 1000));
     
-    return { hours, mins, secs };
+    return { days, hours, mins, secs };
     }
 
+   onTick({ days, hours, mins, secs }) {
+    this.refs.days.textContent = `${days}`;
+    this.refs.hours.textContent = `${hours}`;
+    this.refs.mins.textContent = `${mins}`;
+    this.refs.secs.textContent = `${secs}`;
+     
+    this.refs.labels[0].innerText = `Day${days == 1 ? '' : 's'}`;
+    this.refs.labels[1].innerText = `Hour${hours == 1 ? '' : 's'}`;
+    this.refs.labels[2].innerText = `Minute${mins == 1 ? '' : 's'}`;
+    this.refs.labels[3].innerText = `Second${secs == 1 ? '' : 's'}`;
+   }
      /*
    * Принимает число, приводит к строке и добавляет в начало 0 если число меньше 2-х знаков
    */
@@ -41,15 +61,13 @@ class CountdownTimer {
 }
 
 const timer = new CountdownTimer({
-  onTick: updateClockface,
- /// selector: '#timer-1',
-  //targetDate: new Date('Jun 16, 2021'),
+  selector: '#timer-1',
+  targetDate: new Date('Jan 01, 2021'),
 });
 
-function updateClockface({ days, hours, mins, secs }) {
-  refs.days.textContent = `${days}`;
-  refs.hours.textContent = `${hours}`;
-  refs.mins.textContent = `${mins}`;
-  refs.secs.textContent = `${secs}`;
-}
+timer.start();
+
+
+
+
 
